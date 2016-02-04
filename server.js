@@ -54,6 +54,33 @@ app.delete('/todos/:id', function(req, res){
     res.send(matchedToDo);
 });
 
+// PUT /todos/:id
+app.put('/todos/:id', function(req, res){
+    var todoId = parseInt(req.params.id, 10);
+    var matchedToDo = _.findWhere(todos, {id: todoId});
+    var body = _.pick(req.body, "description", "completed");
+    var validAttributes = {};
+    
+    if(!matchedToDo){
+        return res.status(404).json({"error": "No record found to update."});
+    }
+    
+    if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+        validAttributes.completed = body.completed;
+    } else if(body.hasOwnProperty('completed')){
+        return res.status(404).json({"error":"Invalid value for 'Completed'"});
+    }
+    
+    if(body.hasOwnProperty('description') && _.isString(body.description)){
+        validAttributes.description = body.description;
+    } else if(body.hasOwnProperty('description')){
+        return res.status(404).json({"error":"Invalid value for 'Description'"});
+    }
+    
+    _.extend(matchedToDo, validAttributes);
+    res.json(matchedToDo);
+});
+
 app.listen(port, function(){
     console.log('Express server started!!!');
 })
