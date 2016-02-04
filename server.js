@@ -43,6 +43,17 @@ app.post('/todos', function(req, res){
     res.send(body);
 });
 
+// DELE /todos/:id
+app.delete('/todos/:id', function(req, res){
+    var todoId = parseInt(req.params.id, 10);
+    var matchedToDo = _.findWhere(todos, {id: todoId});
+    if(!matchedToDo){
+        return res.status(404).json({"error": "No record found to delete."});
+    }
+    todos = _.without(todos, matchedToDo);
+    res.send(matchedToDo);
+});
+
 app.listen(port, function(){
     console.log('Express server started!!!');
 })
