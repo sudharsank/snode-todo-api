@@ -17,25 +17,28 @@ app.get('/', function(req, res) {
 
 // GET /todos
 app.get('/todos', function(req, res) {
-    var queryParams = req.query;
-    var filteredTodos = todos;
-    if (queryParams.hasOwnProperty('completed')) {
-        if (queryParams.completed === 'true')
-            filteredTodos = _.where(filteredTodos, {
-                completed: true
-            });
-        else if (queryParams.completed === 'false')
-            filteredTodos = _.where(filteredTodos, {
-                completed: false
-            });
+    var query = req.query;
+    var where = {};
+    if (query.hasOwnProperty('completed')) {
+        if (query.completed === 'true')
+            where.completed = true;
+        else if (query.completed === 'false')
+            where.completed = false;
     }
 
-    if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
-        filteredTodos = _.filter(filteredTodos, function(todo) {
-            return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1;
-        });
+    if (query.hasOwnProperty('q') && query.q.length > 0) {
+        where.description = {
+            $like: '%' + query.q + '%'
+        }
     }
-    res.json(filteredTodos);
+
+    db.todo.findAll({
+        where: where
+    }).then(function(todos) {
+        res.json(todos);
+    }, function(e) {
+        res.status(404).json("Sorry, could not find the todo!!!");
+    })
 });
 
 // GET /todos/:id
