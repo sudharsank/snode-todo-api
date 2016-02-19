@@ -38,7 +38,7 @@ app.get('/todos', function(req, res) {
         res.json(todos);
     }, function(e) {
         res.status(404).json("Sorry, could not find the todo!!!");
-    })
+    });
 });
 
 // GET /todos/:id
@@ -52,7 +52,7 @@ app.get('/todos/:id', function(req, res) {
         }
     }, function(e) {
         res.status(500).json(e);
-    })
+    });
 });
 
 // POST /todos
