@@ -80,6 +80,31 @@ module.exports = function(sequelize, dataTypes) {
 						reject();
 					})
 				});
+			},
+			findByToken: function(token) {
+				return new Promise(function(resolve, reject) {
+					try {
+						var decodedJWT = jwt.verify(token, 'test321!@#');
+						var bytes = cryptojs.AES.decrypt(decodedJWT.token, 'test123!@#');
+						var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
+
+
+						user.findById(tokenData.id).then(function(user) {
+							if (user) {
+								resolve(user);
+							} else {
+								console.error("User not found");
+								reject();
+							}
+						}, function() {
+							console.error("error in FindByID");
+							reject();
+						});
+					} catch (e) {
+						console.error(e);
+						reject();
+					}
+				});
 			}
 		},
 		instanceMethods: {
@@ -87,19 +112,22 @@ module.exports = function(sequelize, dataTypes) {
 				var json = this.toJSON();
 				return _.pick(json, 'id', 'email', 'createdAt', 'updatedAt');
 			},
-			generateToken: function(type){
-				if(!_.isString(type)){
+			generateToken: function(type) {
+				if (!_.isString(type)) {
 					return undefined;
 				}
 
-				try	{
-					var stringData = JSON.stringify({id: this.get('id'), type: type});
+				try {
+					var stringData = JSON.stringify({
+						id: this.get('id'),
+						type: type
+					});
 					var encryptedData = cryptojs.AES.encrypt(stringData, 'test123!@#').toString();
 					var token = jwt.sign({
 						token: encryptedData
 					}, 'test321!@#');
 					return token;
-				} catch (e){
+				} catch (e) {
 					console.error(e);
 					return undefined;
 				}
