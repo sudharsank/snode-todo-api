@@ -18,20 +18,53 @@ var Todo = sequelize.define('todo', {
 		allowNull: false,
 		defaultValue: false
 	}
-})
+});
+
+var User = sequelize.define('user', {
+	email: Sequelize.STRING
+});
+
+Todo.belongsTo(User);
+User.hasMany(Todo);
 
 sequelize.sync({
 	force: false
 }).then(function() {
 	console.log("Everything is synced");
-	
-	Todo.findById(3).then(function(todo){
-		if(todo){
-			console.log(todo.toJSON());
-		}else{
-			console.log('Sorry, todo not found!!!');
-		}
-	})
+
+	// To get all the todos for the user
+	User.findById(1).then(function(user){
+		user.getTodos({
+			where: {
+				completed: false
+			}
+		}).then(function(todos){
+			todos.forEach(function(todo){
+				console.log(todo.toJSON());
+			});
+		});
+	});
+
+	// To create user and todo and then map the todo to the user.
+	// User.create({
+	// 	email: 'sudharsan@gmail.com'
+	// }).then(function(){
+	// 	return Todo.create({
+	// 		description: 'Good coding practice'
+	// 	});
+	// }).then(function(todo){
+	// 	User.findById(1).then(function(user){
+	// 		user.addTodo(todo);
+	// 	});
+	// });
+
+	// Todo.findById(3).then(function(todo){
+	// 	if(todo){
+	// 		console.log(todo.toJSON());
+	// 	}else{
+	// 		console.log('Sorry, todo not found!!!');
+	// 	}
+	// })
 
 	// Todo.create({
 	// 		description: 'Walk the dogs',

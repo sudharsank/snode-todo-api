@@ -66,7 +66,14 @@ app.post('/todos', middleware.requireAuthentication, function(req, res) {
     }
 
     db.todo.create(body).then(function(todo) {
-        res.json(todo.toJSON());
+        //res.json(todo.toJSON());
+
+        // To add mapping between todo and user and also we need to reload 'todo' since it is changed in the DB
+        req.user.addTodo(todo).then(function(){
+            return todo.reload();
+        }).then(function(todo){
+            res.json(todo.toJSON());
+        });
     }, function(e) {
         return res.status(400).json(e);
     })
@@ -157,7 +164,7 @@ app.post('/users/login', function(req, res) {
 });
 
 db.sequelize.sync({
-    force: true
+    force: false
 }).then(function() {
     app.listen(port, function() {
         console.log('Express server started!!!');
