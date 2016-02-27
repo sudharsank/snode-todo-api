@@ -21,7 +21,9 @@ app.get('/', function(req, res) {
 // GET /todos
 app.get('/todos', middleware.requireAuthentication, function(req, res) {
     var query = req.query;
-    var where = {};
+    var where = {
+        userid: req.user.get('id')
+    };
     if (query.hasOwnProperty('completed')) {
         if (query.completed === 'true')
             where.completed = true;
@@ -47,7 +49,14 @@ app.get('/todos', middleware.requireAuthentication, function(req, res) {
 // GET /todos/:id
 app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id, 10);
-    db.todo.findById(todoId).then(function(todo) {
+    var where = {
+        id: todoId,
+        userid: req.user.get('id')
+    };
+
+    db.todo.findOne({
+        where: where
+    }).then(function(todo) {
         if (!!todo) {
             return res.json(todo.toJSON());
         } else {
@@ -56,6 +65,17 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
     }, function(e) {
         res.status(500).json(e);
     });
+
+
+    // db.todo.findById(todoId).then(function(todo) {
+    //     if (!!todo) {
+    //         return res.json(todo.toJSON());
+    //     } else {
+    //         res.status(404).json("Sorry, could not find the todo!!!");
+    //     }
+    // }, function(e) {
+    //     res.status(500).json(e);
+    // });
 });
 
 // POST /todos
@@ -69,9 +89,9 @@ app.post('/todos', middleware.requireAuthentication, function(req, res) {
         //res.json(todo.toJSON());
 
         // To add mapping between todo and user and also we need to reload 'todo' since it is changed in the DB
-        req.user.addTodo(todo).then(function(){
+        req.user.addTodo(todo).then(function() {
             return todo.reload();
-        }).then(function(todo){
+        }).then(function(todo) {
             res.json(todo.toJSON());
         });
     }, function(e) {
@@ -93,11 +113,17 @@ app.post('/users', function(req, res) {
 app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
     var todoId = parseInt(req.params.id, 10);
 
-    db.todo.findById(todoId).then(function(todo) {
+    db.todo.findOne({
+        where: {
+            id: todoId,
+            userid: req.user.get('id')
+        }
+    }).then(function(todo) {
         if (!!todo) {
             db.todo.destroy({
                 where: {
-                    id: todoId
+                    id: todoId,
+                    userid: req.user.get('id')
                 }
             }).then(function(todosDeleted) {
                 if (todosDeleted === 0) {
@@ -132,7 +158,12 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
         attributes.description = body.description;
     }
 
-    db.todo.findById(todoId).then(function(todo) {
+    db.todo.findOne({
+        where: {
+            id: todoId,
+            userid: req.user.get('id')
+        }
+    }).then(function(todo) {
         if (todo) {
             todo.update(attributes).then(function(todo) {
                 res.json(todo.toJSON());
@@ -145,6 +176,20 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
     }, function() {
         res.status(400).send();
     });
+
+    // db.todo.findById(todoId).then(function(todo) {
+    //     if (todo) {
+    //         todo.update(attributes).then(function(todo) {
+    //             res.json(todo.toJSON());
+    //         }, function(e) {
+    //             res.status(500).send(e);
+    //         });
+    //     } else {
+    //         res.status(404).send();
+    //     }
+    // }, function() {
+    //     res.status(400).send();
+    // });
 });
 
 // POST /users/login
