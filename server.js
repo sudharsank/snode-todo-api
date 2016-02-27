@@ -209,7 +209,7 @@ app.post('/users/login', function(req, res) {
 });
 
 db.sequelize.sync({
-    force: false
+    force: true
 }).then(function() {
     app.listen(port, function() {
         console.log('Express server started!!!');
